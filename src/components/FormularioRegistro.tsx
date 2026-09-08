@@ -1,7 +1,8 @@
 "use client";
 
-import React from 'react';
+import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
+import { supabase } from '../lib/supabase';
 
 type FieldConfig = {
   name: string;
@@ -19,11 +20,28 @@ const formFields: FieldConfig[] = [
 ];
 
 export default function FormularioRegistro() {
-  const { register, handleSubmit, formState: { errors } } = useForm();
+  const { register, handleSubmit, formState: { errors }, reset } = useForm();
+  const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
+  const [errorMessage, setErrorMessage] = useState('');
 
-  const onSubmit = (data: any) => {
-    console.log("Datos del formulario enviados:", data);
-    // TODO: Connect to Supabase here
+  const onSubmit = async (data: any) => {
+    setStatus('loading');
+    setErrorMessage('');
+    
+    try {
+      const { error } = await supabase
+        .from('registros_evento')
+        .insert([data]);
+
+      if (error) throw error;
+
+      setStatus('success');
+      reset(); // Limpia el formulario
+    } catch (error: any) {
+      console.error("Error al registrar:", error);
+      setStatus('error');
+      setErrorMessage(error.message || 'Ocurrió un error inesperado al registrar.');
+    }
   };
 
   return (
@@ -52,11 +70,24 @@ export default function FormularioRegistro() {
           </div>
         ))}
 
+        {status === 'success' && (
+          <div className="p-4 rounded-lg bg-green-50 text-green-800 border border-green-200 text-center font-medium">
+            ¡Registro completado con éxito!
+          </div>
+        )}
+
+        {status === 'error' && (
+          <div className="p-4 rounded-lg bg-red-50 text-red-800 border border-red-200 text-center font-medium">
+            {errorMessage}
+          </div>
+        )}
+
         <button
           type="submit"
-          className="w-full bg-blue-900 hover:bg-blue-800 text-white font-bold py-3 px-4 rounded-lg transition-colors focus:ring-4 focus:ring-blue-900/30"
+          disabled={status === 'loading'}
+          className="w-full bg-blue-900 hover:bg-blue-800 text-white font-bold py-3 px-4 rounded-lg transition-colors focus:ring-4 focus:ring-blue-900/30 disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          Registrarse
+          {status === 'loading' ? 'Registrando...' : 'Registrarse'}
         </button>
       </form>
     </div>
