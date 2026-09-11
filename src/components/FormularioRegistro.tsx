@@ -4,6 +4,13 @@ import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { supabase } from '../lib/supabase';
 
+// Sanitización básica para prevenir Inyecciones HTML (XSS)
+const sanitizeText = (text: string | null | undefined) => {
+  if (!text) return text;
+  // Remueve cualquier etiqueta HTML usando regex
+  return text.replace(/<[^>]*>?/gm, '').trim();
+};
+
 type FormData = {
   nombre: string;
   correo: string;
@@ -93,28 +100,28 @@ export default function FormularioRegistro() {
     
     try {
       const payload = {
-        nombre_completo: data.nombre,
-        correo: data.correo,
-        empresa: data.empresa || null,
-        cargo: data.cargo || null,
-        ciudad: data.ciudad,
-        estado: data.estado,
-        situacion: data.situacionActual,
-        situacion_otra: data.situacionOtra || null,
-        tipo_acceso: data.tipoAcceso,
-        condicion_socio: data.condicion,
+        nombre_completo: sanitizeText(data.nombre),
+        correo: sanitizeText(data.correo),
+        empresa: sanitizeText(data.empresa) || null,
+        cargo: sanitizeText(data.cargo) || null,
+        ciudad: sanitizeText(data.ciudad),
+        estado: sanitizeText(data.estado),
+        situacion: sanitizeText(data.situacionActual),
+        situacion_otra: sanitizeText(data.situacionOtra) || null,
+        tipo_acceso: sanitizeText(data.tipoAcceso),
+        condicion_socio: sanitizeText(data.condicion),
         numero_asistentes: data.numeroAsistentes || null,
-        retos: data.retos || null,
-        prioridad_reto: data.pregunta5 || null,
-        urgencia_acciones: data.pregunta6 || null,
+        retos: data.retos ? data.retos.map(r => sanitizeText(r) as string) : null,
+        prioridad_reto: sanitizeText(data.pregunta5) || null,
+        urgencia_acciones: sanitizeText(data.pregunta6) || null,
         recibir_info: data.privacidad,
-        motivaciones: data.motivaciones || null,
-        motivaciones_otro: data.motivaciones_otro || null,
-        retos_otro: data.retos_otro || null,
-        expectativa: data.expectativa || null,
-        expectativa_otro: data.expectativa_otro || null,
-        pregunta_especialistas: data.pregunta_especialistas || null,
-        tipo_actividad: data.tipo_actividad || null
+        motivaciones: data.motivaciones ? data.motivaciones.map(m => sanitizeText(m) as string) : null,
+        motivaciones_otro: sanitizeText(data.motivaciones_otro) || null,
+        retos_otro: sanitizeText(data.retos_otro) || null,
+        expectativa: sanitizeText(data.expectativa) || null,
+        expectativa_otro: sanitizeText(data.expectativa_otro) || null,
+        pregunta_especialistas: sanitizeText(data.pregunta_especialistas) || null,
+        tipo_actividad: sanitizeText(data.tipo_actividad) || null
       };
 
       const { error } = await supabase
@@ -125,9 +132,10 @@ export default function FormularioRegistro() {
 
       setStatus('success');
     } catch (error: any) {
-      console.error("Error al registrar:", error);
+      console.error("Error crítico al registrar (posible volcado de DB):", error);
       setStatus('error');
-      setErrorMessage(error.message || 'Ocurrió un error inesperado al registrar.');
+      // Prevención de Information Disclosure: se oculta el error real de Supabase
+      setErrorMessage('Ocurrió un error al procesar tu registro. Por favor, intenta de nuevo más tarde.');
     }
   };
 
