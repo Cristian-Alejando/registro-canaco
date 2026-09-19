@@ -583,7 +583,7 @@ export default function FormularioRegistro() {
         {/* Controles de navegación */}
         {step !== 3 && (
           <div className="flex justify-between items-center mt-10 pt-6 border-t border-gray-100">
-            {step > 1 && status !== 'success' ? (
+            {step > 1 ? (
               <button 
                 type="button" 
                 onClick={prevStep}
@@ -603,7 +603,7 @@ export default function FormularioRegistro() {
               </button>
             )}
             
-            {step === 4 && status !== 'success' && (
+            {step === 4 && (
               <button 
                 type="submit" 
                 disabled={status === 'loading'}
