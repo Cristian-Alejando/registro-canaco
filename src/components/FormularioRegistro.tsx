@@ -31,6 +31,7 @@ type FormData = {
   retoUrgente: string;
   tiempoAccion: string;
   privacidad: boolean;
+  recibir_info: boolean;
   motivaciones_otro?: string;
   retos_otro?: string;
   expectativa?: string;
@@ -52,7 +53,8 @@ export default function FormularioRegistro() {
       retosActuales: [],
       tipoAcceso: 'Individual',
       condicion: 'No socio',
-      privacidad: false
+      privacidad: false,
+      recibir_info: false
     }
   });
 
@@ -137,7 +139,7 @@ export default function FormularioRegistro() {
         retosActuales: (data.retosActuales || []).map(r => r === 'Otro' && data.retos_otro ? sanitizeText(data.retos_otro) as string : sanitizeText(r) as string),
         retoUrgente: sanitizeText(data.retoUrgente) || null,
         tiempoAccion: sanitizeText(data.tiempoAccion) || null,
-        recibir_info: data.privacidad,
+        recibir_info: data.recibir_info,
         motivosAsistencia: (data.motivosAsistencia || []).map(m => m === 'Otra razón' && data.motivaciones_otro ? sanitizeText(data.motivaciones_otro) as string : sanitizeText(m) as string),
         expectativaAsistencia: sanitizeText(data.expectativa === 'Otro' ? data.expectativa_otro : data.expectativa) || null,
         preguntaEspecialista: sanitizeText(data.pregunta_especialistas) || null,
@@ -165,7 +167,27 @@ export default function FormularioRegistro() {
 
   return (
     <div className="w-full max-w-2xl mx-auto bg-white p-6 md:p-10 rounded-3xl shadow-xl shadow-blue-900/5 border border-gray-100">
-      {/* Barra de progreso */}
+      {status === 'success' ? (
+        <div className="py-12 animate-fade-in text-center">
+          <div className="mx-auto w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mb-6">
+            <svg className="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path></svg>
+          </div>
+          <h3 className="text-2xl md:text-3xl font-bold text-gray-900 mb-4">¡Tu registro quedó listo!</h3>
+          <p className="text-gray-600 mb-8 max-w-lg mx-auto text-lg leading-relaxed">
+            Gracias por compartir lo que buscas. Tus respuestas nos ayudarán a orientar a los contenidos y las conversaciones del foro de comercio.
+          </p>
+          <div className="bg-blue-50 border border-blue-100 p-6 rounded-2xl max-w-md mx-auto text-sm text-blue-800 shadow-sm">
+            <p className="font-semibold mb-2 flex justify-center items-center">
+              <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+              Detalles del evento
+            </p>
+            <p className="opacity-90">[Fecha del evento] | [Lugar o enlace] | [Horario]</p>
+            <p className="text-xs mt-3 opacity-75">(Datos definitivos pendientes por el área organizadora)</p>
+          </div>
+        </div>
+      ) : (
+        <>
+          {/* Barra de progreso */}
       <div className="mb-10">
         <div className="flex justify-between items-center mb-3 relative z-10">
           {[1, 2, 3, 4].map(s => (
@@ -523,25 +545,33 @@ export default function FormularioRegistro() {
               </div>
             </div>
 
-            <div className="flex items-start space-x-4 pt-4 px-2">
-              <input 
-                type="checkbox" 
-                id="privacidad"
-                {...register('privacidad', { required: 'Debes aceptar la política de privacidad para continuar' })}
-                className="mt-1 w-5 h-5 text-blue-900 focus:ring-blue-900 rounded border-gray-300 cursor-pointer shadow-sm"
-              />
-              <label htmlFor="privacidad" className="text-sm text-gray-700 cursor-pointer leading-relaxed">
-                He leído y acepto la política de privacidad y consiento el tratamiento de mis datos personales para los fines del evento. *
-              </label>
-            </div>
-            {errors.privacidad && <span className="text-red-500 text-sm block px-2 font-medium">{errors.privacidad.message}</span>}
-
-            {status === 'success' && (
-              <div className="p-5 rounded-xl bg-green-50 text-green-800 border border-green-200 text-center font-bold shadow-sm animate-fade-in flex items-center justify-center space-x-2">
-                <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                <span>¡Registro completado con éxito! Gracias por unirte.</span>
+            <div className="flex flex-col space-y-3 pt-4 px-2">
+              <div className="flex items-start space-x-4">
+                <input 
+                  type="checkbox" 
+                  id="privacidad"
+                  {...register('privacidad', { required: 'Debes aceptar la política de privacidad para continuar' })}
+                  className="mt-1 w-5 h-5 text-blue-900 focus:ring-blue-900 rounded border-gray-300 cursor-pointer shadow-sm"
+                />
+                <label htmlFor="privacidad" className="text-sm text-gray-700 cursor-pointer leading-relaxed">
+                  He leído y acepto la política de privacidad y consiento el tratamiento de mis datos personales para los fines del evento. *
+                </label>
               </div>
-            )}
+              {errors.privacidad && <span className="text-red-500 text-sm block px-9 font-medium">{errors.privacidad.message}</span>}
+              
+              <div className="flex items-start space-x-4 mt-2">
+                <input 
+                  type="checkbox" 
+                  id="recibir_info"
+                  {...register('recibir_info')}
+                  className="mt-1 w-5 h-5 text-blue-900 focus:ring-blue-900 rounded border-gray-300 cursor-pointer shadow-sm"
+                />
+                <label htmlFor="recibir_info" className="text-sm text-gray-700 cursor-pointer leading-relaxed">
+                  Quiero recibir información sobre próximos eventos y oportunidades.
+                </label>
+              </div>
+            </div>
+
             {status === 'error' && (
               <div className="p-5 rounded-xl bg-red-50 text-red-800 border border-red-200 text-center font-semibold shadow-sm animate-fade-in">
                 {errorMessage}
@@ -585,7 +615,7 @@ export default function FormularioRegistro() {
                       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                       <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                     </svg>
-                    <span>Procesando...</span>
+                    <span>Enviando...</span>
                   </>
                 ) : (
                   <span>Confirmar mi registro</span>
@@ -594,7 +624,9 @@ export default function FormularioRegistro() {
             )}
           </div>
         )}
-      </form>
+        </form>
+      </>
+      )}
     </div>
   );
 }
