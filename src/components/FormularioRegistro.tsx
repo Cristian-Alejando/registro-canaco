@@ -42,7 +42,7 @@ type FormData = {
 
 export default function FormularioRegistro() {
   const [step, setStep] = useState(1);
-  const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
+  const [status, setStatus] = useState<'idle' | 'loading' | 'error' | 'success'>('idle');
   const [errorMessage, setErrorMessage] = useState('');
   const [validandoSocio, setValidandoSocio] = useState(false);
   const [resultadoValidacionSocio, setResultadoValidacionSocio] = useState<{ status: string, existe: boolean, mensaje: string } | null>(null);
