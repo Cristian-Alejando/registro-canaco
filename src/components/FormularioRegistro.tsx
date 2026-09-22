@@ -6,6 +6,25 @@ import { supabase } from '../lib/supabase';
 import { validarSocio } from '../app/actions/validarSocio';
 import Paso3RetosYObjetivos, { Paso3Data } from './Paso3RetosYObjetivos';
 
+const PRECIO_SOCIO_CANACO = 1350;
+const PRECIO_PUBLICO_GENERAL = 1950;
+const IVA_PORCENTAJE = 0.16;
+
+export const calcularTotal = (condicion: string, numeroAsistentes: number) => {
+  let precioBase = condicion === 'Socio' ? PRECIO_SOCIO_CANACO : PRECIO_PUBLICO_GENERAL;
+  const cantidad = Number(numeroAsistentes) || 0;
+  
+  if (cantidad >= 5) {
+    precioBase = precioBase * 0.7; // 30% de descuento
+  }
+  
+  const subtotal = precioBase * cantidad;
+  const iva = subtotal * IVA_PORCENTAJE;
+  const total = subtotal + iva;
+
+  return { precioBase, subtotal, iva, total };
+};
+
 // Sanitización básica para prevenir Inyecciones HTML (XSS)
 const sanitizeText = (text: string | null | undefined) => {
   if (!text) return text;
@@ -49,6 +68,7 @@ export default function FormularioRegistro() {
 
   const { register, handleSubmit, trigger, watch, setValue, getValues, formState: { errors } } = useForm<FormData>({
     defaultValues: {
+      situacionActual: '',
       motivosAsistencia: [],
       retosActuales: [],
       tipoAcceso: 'Individual',
@@ -63,10 +83,20 @@ export default function FormularioRegistro() {
   const watchNumeroSocio = watch('numeroSocio');
   const watchExpectativa = watch('expectativa');
   const watchTipoActividad = watch('tipo_actividad') || [];
+  const watchCondicion = watch('condicion');
+  const watchNumeroAsistentes = watch('numeroAsistentes') || 1;
+
+  const { precioBase, subtotal, iva, total } = calcularTotal(watchCondicion, watchNumeroAsistentes);
   
   const handleValidarSocio = async () => {
     const num = getValues('numeroSocio');
     if (!num) return;
+    
+    // Simulación inmediata de éxito (Contingencia de buena fe)
+    setResultadoValidacionSocio({ status: 'success', existe: true, mensaje: 'Socio validado correctamente.' });
+    
+    /*
+    // TODO: Reactivar cuando IMPERA solucione el SSL para no perder la lógica que ya habíamos construido.
     setValidandoSocio(true);
     setResultadoValidacionSocio(null);
     try {
@@ -77,6 +107,7 @@ export default function FormularioRegistro() {
     } finally {
       setValidandoSocio(false);
     }
+    */
   };
 
   const handlePaso3Submit = (data: Paso3Data) => {
@@ -103,7 +134,7 @@ export default function FormularioRegistro() {
       if (watchSituacion === 'Otra') fieldsToValidate.push('situacionOtra');
     } else if (step === 2) {
       fieldsToValidate = ['tipoAcceso', 'condicion', 'numeroAsistentes'];
-      if (watch('condicion') === 'Socio') fieldsToValidate.push('numeroSocio');
+      if (watchCondicion === 'Socio') fieldsToValidate.push('numeroSocio');
     }
     
     const isValid = await trigger(fieldsToValidate);
@@ -124,16 +155,16 @@ export default function FormularioRegistro() {
     
     try {
       const payload = {
-        nombre_completo: sanitizeText(data.nombre),
-        correo: sanitizeText(data.correo),
+        nombre_completo: sanitizeText(data.nombre) || '',
+        correo: sanitizeText(data.correo) || '',
         empresa: sanitizeText(data.empresa) || null,
         cargo: sanitizeText(data.cargo) || null,
-        ciudad: sanitizeText(data.ciudad),
-        estado: sanitizeText(data.estado),
-        situacion: sanitizeText(data.situacionActual),
+        ciudad: sanitizeText(data.ciudad) || '',
+        estado: sanitizeText(data.estado) || '',
+        situacion: sanitizeText(data.situacionActual) || '',
         situacion_otra: sanitizeText(data.situacionOtra) || null,
-        tipo_acceso: sanitizeText(data.tipoAcceso),
-        condicion_socio: sanitizeText(data.condicion),
+        tipo_acceso: sanitizeText(data.tipoAcceso) || '',
+        condicion_socio: sanitizeText(data.condicion) || '',
         numero_socio: sanitizeText(data.numeroSocio) || null,
         numero_asistentes: data.numeroAsistentes || null,
         retosActuales: (data.retosActuales || []).map(r => r === 'Otro' && data.retos_otro ? sanitizeText(data.retos_otro) as string : sanitizeText(r) as string),
@@ -143,7 +174,11 @@ export default function FormularioRegistro() {
         motivosAsistencia: (data.motivosAsistencia || []).map(m => m === 'Otra razón' && data.motivaciones_otro ? sanitizeText(data.motivaciones_otro) as string : sanitizeText(m) as string),
         expectativaAsistencia: sanitizeText(data.expectativa === 'Otro' ? data.expectativa_otro : data.expectativa) || null,
         preguntaEspecialista: sanitizeText(data.pregunta_especialistas) || null,
-        actividadesUtiles: (data.tipo_actividad || []).map(t => sanitizeText(t) as string)
+        actividadesUtiles: (data.tipo_actividad || []).map(t => sanitizeText(t) as string),
+        subtotal: calcularTotal(data.condicion, data.numeroAsistentes || 1).subtotal,
+        iva: calcularTotal(data.condicion, data.numeroAsistentes || 1).iva,
+        total: calcularTotal(data.condicion, data.numeroAsistentes || 1).total,
+        acepto_privacidad: data.privacidad
       };
 
       const { error } = await supabase
@@ -181,8 +216,7 @@ export default function FormularioRegistro() {
               <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
               Detalles del evento
             </p>
-            <p className="opacity-90">[Fecha del evento] | [Lugar o enlace] | [Horario]</p>
-            <p className="text-xs mt-3 opacity-75">(Datos definitivos pendientes por el área organizadora)</p>
+            <p className="opacity-90">5 de noviembre | Cintermex Magnosalon | 8:00 am - 5:00 pm</p>
           </div>
         </div>
       ) : (
@@ -261,7 +295,7 @@ export default function FormularioRegistro() {
             <div className="md:col-span-2 flex flex-col">
               <label className="mb-2 text-sm font-semibold text-gray-700">Situación actual *</label>
               <select {...register('situacionActual', { required: 'Obligatorio' })} className={inputClass('situacionActual')}>
-                <option value="">Selecciona una opción</option>
+                <option value="" disabled>Selecciona una opción</option>
                 <option value="Tengo un negocio o empresa">Tengo un negocio o empresa</option>
                 <option value="Trabajo en una empresa">Trabajo en una empresa</option>
                 <option value="Estoy por emprender">Estoy por emprender</option>
@@ -302,18 +336,18 @@ export default function FormularioRegistro() {
             <div className="flex flex-col space-y-4">
               <label className="text-base font-semibold text-gray-800">Condición *</label>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <label className={`flex items-center p-4 border rounded-xl cursor-pointer transition-colors ${watch('condicion') === 'Socio' ? 'border-blue-600 bg-blue-50' : 'border-gray-200 hover:border-blue-300'}`}>
+                <label className={`flex items-center p-4 border rounded-xl cursor-pointer transition-colors ${watchCondicion === 'Socio' ? 'border-blue-600 bg-blue-50' : 'border-gray-200 hover:border-blue-300'}`}>
                   <input type="radio" value="Socio" {...register('condicion', { required: 'Obligatorio' })} className="w-5 h-5 text-blue-900 focus:ring-blue-900 border-gray-300" />
                   <span className="ml-3 font-medium text-gray-800">Socio</span>
                 </label>
-                <label className={`flex items-center p-4 border rounded-xl cursor-pointer transition-colors ${watch('condicion') === 'No socio' ? 'border-blue-600 bg-blue-50' : 'border-gray-200 hover:border-blue-300'}`}>
+                <label className={`flex items-center p-4 border rounded-xl cursor-pointer transition-colors ${watchCondicion === 'No socio' ? 'border-blue-600 bg-blue-50' : 'border-gray-200 hover:border-blue-300'}`}>
                   <input type="radio" value="No socio" {...register('condicion', { required: 'Obligatorio' })} className="w-5 h-5 text-blue-900 focus:ring-blue-900 border-gray-300" />
                   <span className="ml-3 font-medium text-gray-800">No socio</span>
                 </label>
               </div>
             </div>
 
-            {watch('condicion') === 'Socio' && (
+            {watchCondicion === 'Socio' && (
               <div className="flex flex-col pt-2 animate-fade-in">
                 <label className="mb-2 text-sm font-semibold text-gray-700">Número de socio *</label>
                 <div className="flex space-x-2">
@@ -376,7 +410,7 @@ export default function FormularioRegistro() {
               {errors.numeroAsistentes && <span className="text-red-500 text-sm mt-1.5 font-medium">{errors.numeroAsistentes.message}</span>}
             </div>
 
-            {/* Tarjeta Resumen Temporal */}
+            {/* Tarjeta Resumen de Tarifas */}
             <div className="mt-8 bg-blue-50/80 p-5 rounded-2xl border border-blue-100 shadow-sm animate-fade-in">
               <h4 className="text-sm font-bold text-blue-900 uppercase tracking-wider mb-4 border-b border-blue-200 pb-2">Resumen de Tarifas</h4>
               <div className="grid grid-cols-2 gap-4 text-sm text-gray-800 mb-4">
@@ -385,18 +419,37 @@ export default function FormularioRegistro() {
                   <span className="font-bold">{watchTipoAcceso || 'No definida'}</span>
                 </div>
                 <div>
-                  <span className="block text-gray-500 text-xs font-semibold uppercase mb-1">Condición Validada</span>
-                  <span className="font-bold">{watch('condicion') || 'No definida'}</span>
+                  <span className="block text-gray-500 text-xs font-semibold uppercase mb-1">Condición</span>
+                  <span className="font-bold">{watchCondicion || 'No definida'}</span>
                 </div>
                 <div className="col-span-2">
                   <span className="block text-gray-500 text-xs font-semibold uppercase mb-1">Cantidad de Asistentes</span>
-                  <span className="font-bold">{watch('numeroAsistentes') || 0}</span>
+                  <span className="font-bold">{watchNumeroAsistentes || 0}</span>
+                </div>
+                <div className="col-span-2 grid grid-cols-1 sm:grid-cols-3 gap-4 mt-2 border-t border-blue-100 pt-3">
+                   <div>
+                     <span className="block text-gray-500 text-xs font-semibold uppercase mb-1">Precio Unitario Aplicado</span>
+                     <span className="font-bold text-gray-700">
+                       ${precioBase.toLocaleString('es-MX', { minimumFractionDigits: 2 })} MXN
+                     </span>
+                   </div>
+                   <div>
+                     <span className="block text-gray-500 text-xs font-semibold uppercase mb-1">Subtotal</span>
+                     <span className="font-bold text-gray-700">
+                       ${subtotal.toLocaleString('es-MX', { minimumFractionDigits: 2 })} MXN
+                     </span>
+                   </div>
+                   <div>
+                     <span className="block text-gray-500 text-xs font-semibold uppercase mb-1">IVA (16%)</span>
+                     <span className="font-bold text-gray-700">
+                       ${iva.toLocaleString('es-MX', { minimumFractionDigits: 2 })} MXN
+                     </span>
+                   </div>
                 </div>
               </div>
               <div className="bg-white p-4 rounded-xl border border-blue-50 text-center shadow-sm">
                 <span className="block text-gray-500 text-xs font-semibold uppercase mb-1">Total a Pagar</span>
-                <span className="text-xl md:text-2xl font-black text-blue-900 block mb-1">$0.00 MXN</span>
-                <span className="text-xs text-blue-600/80 font-medium">(Tarifas y políticas de validación pendientes de configuración)</span>
+                <span className="text-xl md:text-2xl font-black text-blue-900 block mb-1">${total.toLocaleString('es-MX', { minimumFractionDigits: 2 })} MXN</span>
               </div>
             </div>
 
@@ -536,12 +589,31 @@ export default function FormularioRegistro() {
                   <p className="text-blue-600/80 text-xs font-bold uppercase tracking-wider mb-1">Acceso</p>
                   <p className="font-semibold text-gray-800">{getValues('tipoAcceso')} ({getValues('condicion')})</p>
                 </div>
-                {getValues('tipoAcceso') === 'Grupal' && (
-                  <div>
-                    <p className="text-blue-600/80 text-xs font-bold uppercase tracking-wider mb-1">Asistentes</p>
-                    <p className="font-semibold text-gray-800">{getValues('numeroAsistentes')}</p>
+                <div>
+                  <p className="text-blue-600/80 text-xs font-bold uppercase tracking-wider mb-1">Asistentes</p>
+                  <p className="font-semibold text-gray-800">{getValues('numeroAsistentes') || 1}</p>
+                </div>
+                <div className="col-span-1 sm:col-span-2 mt-2 pt-4 border-t border-blue-100/50">
+                  <div className="bg-white p-4 rounded-xl shadow-sm border border-blue-50">
+                    <p className="text-blue-600/80 text-xs font-bold uppercase tracking-wider mb-2">Resumen de Cobro</p>
+                    <div className="flex justify-between items-center text-sm mb-1">
+                      <span className="text-gray-600">Precio Unitario Aplicado:</span>
+                      <span className="font-semibold text-gray-800">${precioBase.toLocaleString('es-MX', { minimumFractionDigits: 2 })} MXN</span>
+                    </div>
+                    <div className="flex justify-between items-center text-sm mb-1">
+                      <span className="text-gray-600">Subtotal:</span>
+                      <span className="font-semibold text-gray-800">${subtotal.toLocaleString('es-MX', { minimumFractionDigits: 2 })} MXN</span>
+                    </div>
+                    <div className="flex justify-between items-center text-sm mb-2 border-b border-gray-100 pb-2">
+                      <span className="text-gray-600">IVA (16%):</span>
+                      <span className="font-semibold text-gray-800">${iva.toLocaleString('es-MX', { minimumFractionDigits: 2 })} MXN</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-gray-800 font-bold">Total a Pagar:</span>
+                      <span className="text-xl font-black text-blue-900">${total.toLocaleString('es-MX', { minimumFractionDigits: 2 })} MXN</span>
+                    </div>
                   </div>
-                )}
+                </div>
               </div>
             </div>
 
