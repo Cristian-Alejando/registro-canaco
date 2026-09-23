@@ -66,7 +66,7 @@ export default function FormularioRegistro() {
   const [validandoSocio, setValidandoSocio] = useState(false);
   const [resultadoValidacionSocio, setResultadoValidacionSocio] = useState<{ status: string, existe: boolean, mensaje: string } | null>(null);
 
-  const { register, handleSubmit, trigger, watch, setValue, getValues, formState: { errors } } = useForm<FormData>({
+  const { register, handleSubmit, trigger, watch, setValue, getValues, reset, formState: { errors } } = useForm<FormData>({
     defaultValues: {
       situacionActual: '',
       motivosAsistencia: [],
@@ -78,6 +78,30 @@ export default function FormularioRegistro() {
     }
   });
 
+  const [comprobanteFile, setComprobanteFile] = useState<File | null>(null);
+
+  // Restaurar progreso desde localStorage al cargar
+  useEffect(() => {
+    const savedData = localStorage.getItem('registroCanacoForm');
+    if (savedData) {
+      try {
+        const parsed = JSON.parse(savedData);
+        if (Object.keys(parsed).length > 0) {
+          reset(parsed);
+        }
+      } catch (e) {
+        console.error("Error al restaurar datos:", e);
+      }
+    }
+  }, [reset]);
+
+  // Guardar progreso en localStorage cada que haya cambios
+  useEffect(() => {
+    const subscription = watch((value) => {
+      localStorage.setItem('registroCanacoForm', JSON.stringify(value));
+    });
+    return () => subscription.unsubscribe();
+  }, [watch]);
   const watchSituacion = watch('situacionActual');
   const watchTipoAcceso = watch('tipoAcceso');
   const watchNumeroSocio = watch('numeroSocio');
@@ -153,6 +177,39 @@ export default function FormularioRegistro() {
     setStatus('loading');
     setErrorMessage('');
     
+    let comprobanteUrl: string | null = null;
+    
+    // Validar comprobante y subirlo si es necesario
+    if (total > 0) {
+      if (!comprobanteFile) {
+        setErrorMessage('El comprobante de pago es obligatorio. Por favor súbelo para continuar.');
+        setStatus('error');
+        return;
+      }
+      
+      try {
+        const fileExt = comprobanteFile.name.split('.').pop();
+        const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
+        
+        const { error: uploadError } = await supabase.storage
+          .from('comprobantes')
+          .upload(fileName, comprobanteFile);
+          
+        if (uploadError) throw uploadError;
+        
+        const { data: { publicUrl } } = supabase.storage
+          .from('comprobantes')
+          .getPublicUrl(fileName);
+          
+        comprobanteUrl = publicUrl;
+      } catch (uploadEx: any) {
+        console.error('Error al subir el comprobante:', uploadEx);
+        setStatus('error');
+        setErrorMessage('Hubo un problema al subir tu comprobante. Por favor intenta de nuevo.');
+        return;
+      }
+    }
+    
     try {
       const payload = {
         nombre_completo: sanitizeText(data.nombre) || '',
@@ -178,7 +235,8 @@ export default function FormularioRegistro() {
         subtotal: calcularTotal(data.condicion, data.numeroAsistentes || 1).subtotal,
         iva: calcularTotal(data.condicion, data.numeroAsistentes || 1).iva,
         total: calcularTotal(data.condicion, data.numeroAsistentes || 1).total,
-        acepto_privacidad: data.privacidad
+        acepto_privacidad: data.privacidad,
+        url_comprobante: comprobanteUrl
       };
 
       const { error } = await supabase
@@ -187,6 +245,8 @@ export default function FormularioRegistro() {
 
       if (error) throw error;
 
+      // Limpiar localStorage tras éxito
+      localStorage.removeItem('registroCanacoForm');
       setStatus('success');
     } catch (error: any) {
       console.error("Error crítico al registrar (posible volcado de DB):", error);
@@ -613,6 +673,34 @@ export default function FormularioRegistro() {
                       <span className="text-xl font-black text-blue-900">${total.toLocaleString('es-MX', { minimumFractionDigits: 2 })} MXN</span>
                     </div>
                   </div>
+                  
+                  {total > 0 && (
+                    <div className="bg-white p-5 rounded-xl border border-blue-100 shadow-sm mt-4 animate-fade-in">
+                      <h4 className="font-bold text-blue-900 mb-3 flex items-center">
+                        <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"></path></svg>
+                        Datos para el pago
+                      </h4>
+                      <div className="grid grid-cols-1 gap-2 mb-5 p-4 bg-blue-50/50 rounded-lg text-sm">
+                        <div className="flex justify-between border-b border-blue-100 pb-2"><span className="text-gray-500 font-semibold uppercase text-xs">Banco</span><span className="font-bold text-gray-800">Banca Afirme</span></div>
+                        <div className="flex justify-between border-b border-blue-100 pb-2 pt-1"><span className="text-gray-500 font-semibold uppercase text-xs">Cuenta</span><span className="font-bold text-gray-800">101129667</span></div>
+                        <div className="flex justify-between pt-1"><span className="text-gray-500 font-semibold uppercase text-xs">CLABE</span><span className="font-bold text-gray-800">062580001011296674</span></div>
+                      </div>
+                      
+                      <div className="flex flex-col space-y-2 mt-4">
+                        <label className="font-semibold text-gray-800">Sube tu comprobante de pago *</label>
+                        <p className="text-xs text-gray-500 mb-2">Adjunta una imagen o PDF de tu transferencia o depósito.</p>
+                        <input 
+                          type="file" 
+                          accept="image/*,application/pdf"
+                          onChange={(e) => {
+                            setComprobanteFile(e.target.files?.[0] || null);
+                            if (status === 'error') setStatus('idle'); // limpiar error si lo había
+                          }}
+                          className="block w-full text-sm text-gray-500 file:mr-4 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-bold file:bg-blue-100 file:text-blue-900 hover:file:bg-blue-200 transition-colors cursor-pointer bg-gray-50 rounded-xl"
+                        />
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>

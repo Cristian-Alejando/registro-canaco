@@ -37,6 +37,7 @@ export interface Database {
           iva: number
           total: number
           acepto_privacidad: boolean
+          url_comprobante?: string | null
         }
         Insert: {
           id?: number
@@ -65,6 +66,7 @@ export interface Database {
           iva: number
           total: number
           acepto_privacidad: boolean
+          url_comprobante?: string | null
         }
         Update: Partial<Database['public']['Tables']['registros_evento']['Insert']>
         Relationships: []
