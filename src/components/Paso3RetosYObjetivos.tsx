@@ -148,7 +148,7 @@ export default function Paso3RetosYObjetivos({ initialData, onSubmit, onBack }: 
         {/* Pregunta 1 */}
         <div className="space-y-4">
           <div>
-            <h3 className="text-lg font-semibold text-gray-800">1. ¿Qué te mueve principalmente a asistir al foro? *</h3>
+            <h3 className="text-lg font-semibold text-foro-blue">1. ¿Qué te mueve principalmente a asistir al foro? *</h3>
             <p className="text-sm text-gray-500">Selecciona entre 1 y 2 opciones.</p>
           </div>
           
@@ -183,7 +183,7 @@ export default function Paso3RetosYObjetivos({ initialData, onSubmit, onBack }: 
         {/* Pregunta 2 */}
         <div className="space-y-4">
           <div>
-            <h3 className="text-lg font-semibold text-gray-800">2. ¿Qué retos te están frenando más en este momento? *</h3>
+            <h3 className="text-lg font-semibold text-foro-blue">2. ¿Qué retos te están frenando más en este momento? *</h3>
             <p className="text-sm text-gray-500">Selecciona entre 1 y 3 opciones.</p>
           </div>
           
@@ -231,7 +231,7 @@ export default function Paso3RetosYObjetivos({ initialData, onSubmit, onBack }: 
             {/* Pregunta 3 */}
             <div className="space-y-4">
               <div>
-                <h3 className="text-lg font-semibold text-gray-800">3. De esos retos, ¿Cuál te urge más resolver? *</h3>
+                <h3 className="text-lg font-semibold text-foro-blue">3. De esos retos, ¿Cuál te urge más resolver? *</h3>
                 {retos.length > 0 && (
                   <div className="mt-2 p-3 bg-amber-50 border border-amber-200 rounded-md">
                     <p className="text-xs text-amber-800 font-medium mb-1">Tus retos seleccionados:</p>
@@ -268,7 +268,7 @@ export default function Paso3RetosYObjetivos({ initialData, onSubmit, onBack }: 
             {/* Pregunta 4 */}
             <div className="space-y-4">
               <div>
-                <h3 className="text-lg font-semibold text-gray-800">4. ¿Cuándo te gustaría tomar acciones para resolverlo? *</h3>
+                <h3 className="text-lg font-semibold text-foro-blue">4. ¿Cuándo te gustaría tomar acciones para resolverlo? *</h3>
               </div>
               
               <div className="space-y-3">
@@ -315,7 +315,7 @@ export default function Paso3RetosYObjetivos({ initialData, onSubmit, onBack }: 
           <button
             type="button"
             onClick={handleSubmit}
-            className="px-6 py-2.5 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors shadow-sm"
+            className="px-6 py-2.5 text-sm font-medium text-white bg-foro-orange border border-transparent rounded-lg hover:brightness-95 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors shadow-sm"
           >
             Continuar
           </button>

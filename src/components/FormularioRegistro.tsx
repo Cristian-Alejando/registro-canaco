@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { supabase } from '../lib/supabase';
 import { validarSocio } from '../app/actions/validarSocio';
+import { procesarRegistro } from '../app/actions/procesarRegistro';
 import Paso3RetosYObjetivos, { Paso3Data } from './Paso3RetosYObjetivos';
 
 const PRECIO_SOCIO_CANACO = 1350;
@@ -239,11 +240,13 @@ export default function FormularioRegistro() {
         url_comprobante: comprobanteUrl
       };
 
-      const { error } = await supabase
-        .from('registros_evento')
-        .insert([payload]);
+      const resultado = await procesarRegistro(payload);
 
-      if (error) throw error;
+      if (!resultado.success) {
+        setErrorMessage(resultado.error || 'Error de validación o del servidor.');
+        setStatus('error');
+        return;
+      }
 
       // Limpiar localStorage tras éxito
       localStorage.removeItem('registroCanacoForm');
@@ -256,22 +259,22 @@ export default function FormularioRegistro() {
     }
   };
 
-  const inputClass = (fieldName: keyof FormData) => `w-full px-4 py-3 rounded-xl border focus:ring-2 focus:ring-blue-600 focus:border-blue-600 outline-none transition-colors text-gray-900 ${
+  const inputClass = (fieldName: keyof FormData) => `w-full px-4 py-3 rounded-lg border focus:ring-2 focus:ring-blue-600 focus:border-blue-600 outline-none transition-colors text-gray-900 ${
     errors[fieldName] ? 'border-red-500 bg-red-50' : 'border-gray-300 bg-gray-50 hover:bg-white'
   }`;
 
   return (
-    <div className="w-full max-w-2xl mx-auto bg-white p-6 md:p-10 rounded-3xl shadow-xl shadow-blue-900/5 border border-gray-100">
+    <div className="w-full max-w-2xl mx-auto bg-white p-6 md:p-10 rounded-lg shadow-xl border border-gray-100">
       {status === 'success' ? (
         <div className="py-12 animate-fade-in text-center">
-          <div className="mx-auto w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mb-6">
-            <svg className="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path></svg>
+          <div className="mx-auto w-16 h-16 bg-foro-orange rounded-full flex items-center justify-center mb-6 shadow-md">
+            <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path></svg>
           </div>
-          <h3 className="text-2xl md:text-3xl font-bold text-gray-900 mb-4">¡Tu registro quedó listo!</h3>
+          <h3 className="text-2xl md:text-3xl font-bold text-foro-blue mb-4">¡Tu registro quedó listo!</h3>
           <p className="text-gray-600 mb-8 max-w-lg mx-auto text-lg leading-relaxed">
             Gracias por compartir lo que buscas. Tus respuestas nos ayudarán a orientar a los contenidos y las conversaciones del foro de comercio.
           </p>
-          <div className="bg-blue-50 border border-blue-100 p-6 rounded-2xl max-w-md mx-auto text-sm text-blue-800 shadow-sm">
+          <div className="bg-foro-lightblue/10 border border-foro-lightblue p-6 rounded-2xl max-w-md mx-auto text-sm text-foro-blue shadow-sm">
             <p className="font-semibold mb-2 flex justify-center items-center">
               <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
               Detalles del evento
@@ -285,18 +288,18 @@ export default function FormularioRegistro() {
       <div className="mb-10">
         <div className="flex justify-between items-center mb-3 relative z-10">
           {[1, 2, 3, 4].map(s => (
-            <div key={s} className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm transition-all duration-500 ${step >= s ? 'bg-blue-900 text-white shadow-md scale-110' : 'bg-gray-50 text-gray-400 border border-gray-200'}`}>
+            <div key={s} className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm transition-all duration-500 ${step >= s ? 'bg-foro-orange text-white shadow-md scale-110' : 'bg-gray-50 text-gray-400 border border-gray-200'}`}>
               {s}
             </div>
           ))}
         </div>
         <div className="relative -mt-8 mb-8 z-0 px-2">
           <div className="h-1.5 w-full bg-gray-100 rounded-full absolute top-4 left-0"></div>
-          <div className="h-1.5 bg-blue-900 rounded-full absolute top-4 left-0 transition-all duration-500 ease-out" style={{ width: `${((step - 1) / 3) * 100}%` }}></div>
+          <div className="h-1.5 bg-foro-orange rounded-full absolute top-4 left-0 transition-all duration-500 ease-out" style={{ width: `${((step - 1) / 3) * 100}%` }}></div>
         </div>
       </div>
 
-      <h2 className="text-2xl md:text-3xl font-bold text-blue-900 mb-8 text-center tracking-tight">
+      <h2 className="text-2xl md:text-3xl font-bold text-foro-blue mb-8 text-center tracking-tight">
         {step === 1 && "Perfil del Asistente"}
         {step === 2 && "Detalles de Acceso"}
         {step === 3 && "Retos y Objetivos"}
@@ -382,12 +385,12 @@ export default function FormularioRegistro() {
             <div className="flex flex-col space-y-4">
               <label className="text-base font-semibold text-gray-800">Tipo de acceso *</label>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <label className={`flex items-center p-4 border rounded-xl cursor-pointer transition-colors ${watchTipoAcceso === 'Individual' ? 'border-blue-600 bg-blue-50' : 'border-gray-200 hover:border-blue-300'}`}>
-                  <input type="radio" value="Individual" {...register('tipoAcceso', { required: 'Obligatorio' })} className="w-5 h-5 text-blue-900 focus:ring-blue-900 border-gray-300" />
+                <label className={`flex items-center p-4 border rounded-lg cursor-pointer transition-colors ${watchTipoAcceso === 'Individual' ? 'border-blue-600 bg-blue-50' : 'border-gray-200 hover:border-blue-300'}`}>
+                  <input type="radio" value="Individual" {...register('tipoAcceso', { required: 'Obligatorio' })} className="w-5 h-5 text-foro-blue focus:ring-blue-900 border-gray-300" />
                   <span className="ml-3 font-medium text-gray-800">Individual</span>
                 </label>
-                <label className={`flex items-center p-4 border rounded-xl cursor-pointer transition-colors ${watchTipoAcceso === 'Grupal' ? 'border-blue-600 bg-blue-50' : 'border-gray-200 hover:border-blue-300'}`}>
-                  <input type="radio" value="Grupal" {...register('tipoAcceso', { required: 'Obligatorio' })} className="w-5 h-5 text-blue-900 focus:ring-blue-900 border-gray-300" />
+                <label className={`flex items-center p-4 border rounded-lg cursor-pointer transition-colors ${watchTipoAcceso === 'Grupal' ? 'border-blue-600 bg-blue-50' : 'border-gray-200 hover:border-blue-300'}`}>
+                  <input type="radio" value="Grupal" {...register('tipoAcceso', { required: 'Obligatorio' })} className="w-5 h-5 text-foro-blue focus:ring-blue-900 border-gray-300" />
                   <span className="ml-3 font-medium text-gray-800">Grupal</span>
                 </label>
               </div>
@@ -396,12 +399,12 @@ export default function FormularioRegistro() {
             <div className="flex flex-col space-y-4">
               <label className="text-base font-semibold text-gray-800">Condición *</label>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <label className={`flex items-center p-4 border rounded-xl cursor-pointer transition-colors ${watchCondicion === 'Socio' ? 'border-blue-600 bg-blue-50' : 'border-gray-200 hover:border-blue-300'}`}>
-                  <input type="radio" value="Socio" {...register('condicion', { required: 'Obligatorio' })} className="w-5 h-5 text-blue-900 focus:ring-blue-900 border-gray-300" />
+                <label className={`flex items-center p-4 border rounded-lg cursor-pointer transition-colors ${watchCondicion === 'Socio' ? 'border-blue-600 bg-blue-50' : 'border-gray-200 hover:border-blue-300'}`}>
+                  <input type="radio" value="Socio" {...register('condicion', { required: 'Obligatorio' })} className="w-5 h-5 text-foro-blue focus:ring-blue-900 border-gray-300" />
                   <span className="ml-3 font-medium text-gray-800">Socio</span>
                 </label>
-                <label className={`flex items-center p-4 border rounded-xl cursor-pointer transition-colors ${watchCondicion === 'No socio' ? 'border-blue-600 bg-blue-50' : 'border-gray-200 hover:border-blue-300'}`}>
-                  <input type="radio" value="No socio" {...register('condicion', { required: 'Obligatorio' })} className="w-5 h-5 text-blue-900 focus:ring-blue-900 border-gray-300" />
+                <label className={`flex items-center p-4 border rounded-lg cursor-pointer transition-colors ${watchCondicion === 'No socio' ? 'border-blue-600 bg-blue-50' : 'border-gray-200 hover:border-blue-300'}`}>
+                  <input type="radio" value="No socio" {...register('condicion', { required: 'Obligatorio' })} className="w-5 h-5 text-foro-blue focus:ring-blue-900 border-gray-300" />
                   <span className="ml-3 font-medium text-gray-800">No socio</span>
                 </label>
               </div>
@@ -422,7 +425,7 @@ export default function FormularioRegistro() {
                     type="button"
                     onClick={handleValidarSocio}
                     disabled={validandoSocio || resultadoValidacionSocio?.existe || !watchNumeroSocio}
-                    className="px-4 py-2 bg-blue-900 text-white font-bold rounded-xl hover:bg-blue-800 transition-all shadow-md hover:shadow-blue-900/30 disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap flex items-center justify-center min-w-[100px]"
+                    className="px-4 py-2 bg-foro-orange text-white font-bold rounded-lg hover:brightness-95 transition-all shadow-md hover:shadow-blue-900/30 disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap flex items-center justify-center min-w-[100px]"
                   >
                     {validandoSocio ? (
                        <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
@@ -472,7 +475,7 @@ export default function FormularioRegistro() {
 
             {/* Tarjeta Resumen de Tarifas */}
             <div className="mt-8 bg-blue-50/80 p-5 rounded-2xl border border-blue-100 shadow-sm animate-fade-in">
-              <h4 className="text-sm font-bold text-blue-900 uppercase tracking-wider mb-4 border-b border-blue-200 pb-2">Resumen de Tarifas</h4>
+              <h4 className="text-sm font-bold text-foro-blue uppercase tracking-wider mb-4 border-b border-blue-200 pb-2">Resumen de Tarifas</h4>
               <div className="grid grid-cols-2 gap-4 text-sm text-gray-800 mb-4">
                 <div>
                   <span className="block text-gray-500 text-xs font-semibold uppercase mb-1">Modalidad</span>
@@ -507,9 +510,9 @@ export default function FormularioRegistro() {
                    </div>
                 </div>
               </div>
-              <div className="bg-white p-4 rounded-xl border border-blue-50 text-center shadow-sm">
+              <div className="bg-white p-4 rounded-lg border border-blue-50 text-center shadow-sm">
                 <span className="block text-gray-500 text-xs font-semibold uppercase mb-1">Total a Pagar</span>
-                <span className="text-xl md:text-2xl font-black text-blue-900 block mb-1">${total.toLocaleString('es-MX', { minimumFractionDigits: 2 })} MXN</span>
+                <span className="text-xl md:text-2xl font-black text-foro-blue block mb-1">${total.toLocaleString('es-MX', { minimumFractionDigits: 2 })} MXN</span>
               </div>
             </div>
 
@@ -550,12 +553,12 @@ export default function FormularioRegistro() {
                   'Tener más claridad para tomar una decisión',
                   'Otro'
                 ].map(opcion => (
-                  <label key={opcion} className={`flex items-center p-3 border rounded-xl cursor-pointer transition-colors ${watchExpectativa === opcion ? 'border-blue-600 bg-blue-50' : 'border-gray-200 hover:bg-gray-50'}`}>
+                  <label key={opcion} className={`flex items-center p-3 border rounded-lg cursor-pointer transition-colors ${watchExpectativa === opcion ? 'border-blue-600 bg-blue-50' : 'border-gray-200 hover:bg-gray-50'}`}>
                     <input 
                       type="radio" 
                       value={opcion} 
                       {...register('expectativa', { required: 'Obligatorio' })} 
-                      className="w-5 h-5 text-blue-900 focus:ring-blue-900 border-gray-300" 
+                      className="w-5 h-5 text-foro-blue focus:ring-blue-900 border-gray-300" 
                     />
                     <span className="ml-3 font-medium text-gray-800">{opcion}</span>
                   </label>
@@ -581,7 +584,7 @@ export default function FormularioRegistro() {
               <div className="relative">
                 <textarea 
                   {...register('pregunta_especialistas', { maxLength: { value: 500, message: 'Máximo 500 caracteres' } })} 
-                  className={`w-full p-3 border rounded-xl shadow-sm focus:ring-2 focus:ring-blue-600 focus:border-blue-600 resize-none text-gray-900 ${errors.pregunta_especialistas ? 'border-red-300' : 'border-gray-300'}`}
+                  className={`w-full p-3 border rounded-lg shadow-sm focus:ring-2 focus:ring-blue-600 focus:border-blue-600 resize-none text-gray-900 ${errors.pregunta_especialistas ? 'border-red-300' : 'border-gray-300'}`}
                   rows={4}
                   maxLength={500}
                   placeholder="Escribe tu pregunta aquí..."
@@ -608,7 +611,7 @@ export default function FormularioRegistro() {
                   const isDisabled = !isChecked && watchTipoActividad.length >= 2;
                   
                   return (
-                    <label key={opcion} className={`flex items-center p-3 border rounded-xl transition-colors ${isChecked ? 'border-blue-600 bg-blue-50' : 'border-gray-200'} ${isDisabled ? 'cursor-not-allowed opacity-50 bg-gray-50' : 'cursor-pointer hover:border-blue-300'}`}>
+                    <label key={opcion} className={`flex items-center p-3 border rounded-lg transition-colors ${isChecked ? 'border-blue-600 bg-blue-50' : 'border-gray-200'} ${isDisabled ? 'cursor-not-allowed opacity-50 bg-gray-50' : 'cursor-pointer hover:border-blue-300'}`}>
                       <input 
                         type="checkbox" 
                         value={opcion} 
@@ -619,7 +622,7 @@ export default function FormularioRegistro() {
                           }
                         })} 
                         disabled={isDisabled}
-                        className="w-5 h-5 text-blue-900 focus:ring-blue-900 rounded border-gray-300" 
+                        className="w-5 h-5 text-foro-blue focus:ring-blue-900 rounded border-gray-300" 
                       />
                       <span className="ml-3 text-sm font-medium text-gray-800">{opcion}</span>
                     </label>
@@ -631,7 +634,7 @@ export default function FormularioRegistro() {
 
             {/* Resumen */}
             <div className="bg-gradient-to-br from-blue-50 to-white p-6 md:p-8 rounded-2xl border border-blue-100 shadow-sm space-y-4">
-              <h3 className="text-xl font-bold text-blue-900 mb-2 border-b border-blue-100 pb-3">Resumen de tu registro</h3>
+              <h3 className="text-xl font-bold text-foro-blue mb-2 border-b border-blue-100 pb-3">Resumen de tu registro</h3>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-5 gap-x-4">
                 <div>
                   <p className="text-blue-600/80 text-xs font-bold uppercase tracking-wider mb-1">Nombre</p>
@@ -654,7 +657,7 @@ export default function FormularioRegistro() {
                   <p className="font-semibold text-gray-800">{getValues('numeroAsistentes') || 1}</p>
                 </div>
                 <div className="col-span-1 sm:col-span-2 mt-2 pt-4 border-t border-blue-100/50">
-                  <div className="bg-white p-4 rounded-xl shadow-sm border border-blue-50">
+                  <div className="bg-white p-4 rounded-lg shadow-sm border border-blue-50">
                     <p className="text-blue-600/80 text-xs font-bold uppercase tracking-wider mb-2">Resumen de Cobro</p>
                     <div className="flex justify-between items-center text-sm mb-1">
                       <span className="text-gray-600">Precio Unitario Aplicado:</span>
@@ -670,13 +673,13 @@ export default function FormularioRegistro() {
                     </div>
                     <div className="flex justify-between items-center">
                       <span className="text-gray-800 font-bold">Total a Pagar:</span>
-                      <span className="text-xl font-black text-blue-900">${total.toLocaleString('es-MX', { minimumFractionDigits: 2 })} MXN</span>
+                      <span className="text-xl font-black text-foro-blue">${total.toLocaleString('es-MX', { minimumFractionDigits: 2 })} MXN</span>
                     </div>
                   </div>
                   
                   {total > 0 && (
-                    <div className="bg-white p-5 rounded-xl border border-blue-100 shadow-sm mt-4 animate-fade-in">
-                      <h4 className="font-bold text-blue-900 mb-3 flex items-center">
+                    <div className="bg-white p-5 rounded-lg border border-blue-100 shadow-sm mt-4 animate-fade-in">
+                      <h4 className="font-bold text-foro-blue mb-3 flex items-center">
                         <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"></path></svg>
                         Datos para el pago
                       </h4>
@@ -696,7 +699,7 @@ export default function FormularioRegistro() {
                             setComprobanteFile(e.target.files?.[0] || null);
                             if (status === 'error') setStatus('idle'); // limpiar error si lo había
                           }}
-                          className="block w-full text-sm text-gray-500 file:mr-4 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-bold file:bg-blue-100 file:text-blue-900 hover:file:bg-blue-200 transition-colors cursor-pointer bg-gray-50 rounded-xl"
+                          className="block w-full text-sm text-gray-500 file:mr-4 file:py-2.5 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-bold file:bg-blue-100 file:text-foro-blue hover:file:bg-blue-200 transition-colors cursor-pointer bg-gray-50 rounded-lg"
                         />
                       </div>
                     </div>
@@ -711,7 +714,7 @@ export default function FormularioRegistro() {
                   type="checkbox" 
                   id="privacidad"
                   {...register('privacidad', { required: 'Debes aceptar la política de privacidad para continuar' })}
-                  className="mt-1 w-5 h-5 text-blue-900 focus:ring-blue-900 rounded border-gray-300 cursor-pointer shadow-sm"
+                  className="mt-1 w-5 h-5 text-foro-blue focus:ring-blue-900 rounded border-gray-300 cursor-pointer shadow-sm"
                 />
                 <label htmlFor="privacidad" className="text-sm text-gray-700 cursor-pointer leading-relaxed">
                   He leído y acepto la política de privacidad y consiento el tratamiento de mis datos personales para los fines del evento. *
@@ -724,7 +727,7 @@ export default function FormularioRegistro() {
                   type="checkbox" 
                   id="recibir_info"
                   {...register('recibir_info')}
-                  className="mt-1 w-5 h-5 text-blue-900 focus:ring-blue-900 rounded border-gray-300 cursor-pointer shadow-sm"
+                  className="mt-1 w-5 h-5 text-foro-blue focus:ring-blue-900 rounded border-gray-300 cursor-pointer shadow-sm"
                 />
                 <label htmlFor="recibir_info" className="text-sm text-gray-700 cursor-pointer leading-relaxed">
                   Quiero recibir información sobre próximos eventos y oportunidades.
@@ -733,7 +736,7 @@ export default function FormularioRegistro() {
             </div>
 
             {status === 'error' && (
-              <div className="p-5 rounded-xl bg-red-50 text-red-800 border border-red-200 text-center font-semibold shadow-sm animate-fade-in">
+              <div className="p-5 rounded-lg bg-red-50 text-red-800 border border-red-200 text-center font-semibold shadow-sm animate-fade-in">
                 {errorMessage}
               </div>
             )}
@@ -747,7 +750,7 @@ export default function FormularioRegistro() {
               <button 
                 type="button" 
                 onClick={prevStep}
-                className="px-6 py-3 border-2 border-blue-100 text-blue-900 font-bold rounded-xl hover:bg-blue-50 transition-colors focus:ring-4 focus:ring-blue-900/10"
+                className="px-6 py-3 border-2 border-blue-100 text-foro-blue font-bold rounded-lg hover:bg-blue-50 transition-colors focus:ring-4 focus:ring-blue-900/10"
               >
                 Anterior
               </button>
@@ -757,7 +760,7 @@ export default function FormularioRegistro() {
               <button 
                 type="button" 
                 onClick={nextStep}
-                className="w-full sm:w-auto px-8 py-3 bg-blue-900 text-white font-bold rounded-xl hover:bg-blue-800 transition-all shadow-lg hover:shadow-blue-900/30 focus:ring-4 focus:ring-blue-900/30 ml-auto"
+                className="w-full sm:w-auto px-8 py-3 bg-foro-orange text-white font-bold rounded-lg hover:brightness-95 transition-all shadow-lg hover:shadow-blue-900/30 focus:ring-4 focus:ring-blue-900/30 ml-auto"
               >
                 Continuar
               </button>
@@ -767,7 +770,7 @@ export default function FormularioRegistro() {
               <button 
                 type="submit" 
                 disabled={status === 'loading'}
-                className="w-full sm:w-auto px-8 py-3 bg-blue-900 text-white font-bold rounded-xl hover:bg-blue-800 transition-all shadow-lg hover:shadow-blue-900/30 focus:ring-4 focus:ring-blue-900/30 disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center space-x-2 ml-auto"
+                className="w-full sm:w-auto px-8 py-3 bg-foro-orange text-white font-bold rounded-lg hover:brightness-95 transition-all shadow-lg hover:shadow-blue-900/30 focus:ring-4 focus:ring-blue-900/30 disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center space-x-2 ml-auto"
               >
                 {status === 'loading' ? (
                   <>
