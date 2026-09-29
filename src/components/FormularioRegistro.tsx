@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useForm } from 'react-hook-form';
 import { supabase } from '../lib/supabase';
 import { validarSocio } from '../app/actions/validarSocio';
@@ -80,6 +80,8 @@ export default function FormularioRegistro() {
   });
 
   const [comprobanteFile, setComprobanteFile] = useState<File | null>(null);
+  const [errorPago, setErrorPago] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Restaurar progreso desde localStorage al cargar
   useEffect(() => {
@@ -257,6 +259,31 @@ export default function FormularioRegistro() {
       // Prevención de Information Disclosure: se oculta el error real de Supabase
       setErrorMessage('Ocurrió un error al procesar tu registro. Por favor, intenta de nuevo más tarde.');
     }
+  };
+
+  const MAX_FILE_SIZE_BYTES = 2 * 1024 * 1024; // 2 MB
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    
+    if (!file) {
+      setComprobanteFile(null);
+      setErrorPago(null);
+      return;
+    }
+
+    if (file.size > MAX_FILE_SIZE_BYTES) {
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+      setComprobanteFile(null);
+      setErrorPago('El comprobante es demasiado pesado. Por favor, sube un archivo que no supere los 2 MB.');
+      return;
+    }
+
+    setErrorPago(null);
+    setComprobanteFile(file);
+    if (status === 'error') setStatus('idle'); // limpiar error general si lo había
   };
 
   const inputClass = (fieldName: keyof FormData) => `w-full px-4 py-3 rounded-lg border focus:ring-2 focus:ring-blue-600 focus:border-blue-600 outline-none transition-colors text-gray-900 ${
@@ -694,13 +721,21 @@ export default function FormularioRegistro() {
                         <p className="text-xs text-gray-500 mb-2">Adjunta una imagen o PDF de tu transferencia o depósito.</p>
                         <input 
                           type="file" 
+                          ref={fileInputRef}
                           accept="image/*,application/pdf"
-                          onChange={(e) => {
-                            setComprobanteFile(e.target.files?.[0] || null);
-                            if (status === 'error') setStatus('idle'); // limpiar error si lo había
-                          }}
-                          className="block w-full text-sm text-gray-500 file:mr-4 file:py-2.5 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-bold file:bg-blue-100 file:text-foro-blue hover:file:bg-blue-200 transition-colors cursor-pointer bg-gray-50 rounded-lg"
+                          onChange={handleFileChange}
+                          className={`block w-full text-sm file:mr-4 file:py-2.5 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-bold file:bg-blue-100 file:text-foro-blue hover:file:bg-blue-200 transition-colors cursor-pointer rounded-lg ${errorPago ? 'text-red-500 bg-red-50 border border-red-500' : 'text-gray-500 bg-gray-50'}`}
                         />
+                        {errorPago && (
+                          <p className="text-sm text-red-600 font-medium animate-pulse transition-all mt-1">
+                            {errorPago}
+                          </p>
+                        )}
+                        {comprobanteFile && !errorPago && (
+                          <p className="text-sm text-green-600 font-medium mt-1">
+                            ✓ Archivo seleccionado: {comprobanteFile.name}
+                          </p>
+                        )}
                       </div>
                     </div>
                   )}

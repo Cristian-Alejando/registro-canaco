@@ -114,7 +114,7 @@ export default function Paso3RetosYObjetivos({ initialData, onSubmit, onBack }: 
     if (retos.length < 1) {
       newErrors.retos = "Selecciona al menos 1 opción.";
     }
-    
+
     if (!esOpcionExclusivaSeleccionada) {
       if (!retoUrgente.trim()) {
         newErrors.retoUrgente = "Este campo es obligatorio.";
@@ -144,22 +144,22 @@ export default function Paso3RetosYObjetivos({ initialData, onSubmit, onBack }: 
       </div>
 
       <div className="space-y-10">
-        
+
         {/* Pregunta 1 */}
         <div className="space-y-4">
           <div>
             <h3 className="text-lg font-semibold text-foro-blue">1. ¿Qué te mueve principalmente a asistir al foro? *</h3>
             <p className="text-sm text-gray-500">Selecciona entre 1 y 2 opciones.</p>
           </div>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             {MOTIVOS_OPCIONES.map((opcion) => {
               const isChecked = motivos.includes(opcion);
               const isDisabled = !isChecked && motivos.length >= 2;
-              
+
               return (
-                <label 
-                  key={opcion} 
+                <label
+                  key={opcion}
                   className={`flex items-start p-3 rounded-lg border cursor-pointer transition-colors
                     ${isChecked ? 'bg-blue-50 border-blue-500' : 'border-gray-200 hover:bg-gray-50'}
                     ${isDisabled ? 'opacity-50 cursor-not-allowed hover:bg-white' : ''}
@@ -186,12 +186,12 @@ export default function Paso3RetosYObjetivos({ initialData, onSubmit, onBack }: 
             <h3 className="text-lg font-semibold text-foro-blue">2. ¿Qué retos te están frenando más en este momento? *</h3>
             <p className="text-sm text-gray-500">Selecciona entre 1 y 3 opciones.</p>
           </div>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             {RETOS_OPCIONES.map((opcion) => {
               const isChecked = retos.includes(opcion);
               const isExclusiva = opcion === OPCION_EXCLUSIVA;
-              
+
               // Deshabilitar si no está chequeada y ya hay 3 seleccionadas
               // O si la opción exclusiva está seleccionada y esta no es la exclusiva
               let isDisabled = false;
@@ -199,8 +199,8 @@ export default function Paso3RetosYObjetivos({ initialData, onSubmit, onBack }: 
               if (esOpcionExclusivaSeleccionada && !isExclusiva) isDisabled = true;
 
               return (
-                <label 
-                  key={opcion} 
+                <label
+                  key={opcion}
                   className={`flex items-start p-3 rounded-lg border cursor-pointer transition-colors
                     ${isChecked ? 'bg-indigo-50 border-indigo-500' : 'border-gray-200 hover:bg-gray-50'}
                     ${isDisabled ? 'opacity-50 cursor-not-allowed hover:bg-white' : ''}
@@ -227,7 +227,7 @@ export default function Paso3RetosYObjetivos({ initialData, onSubmit, onBack }: 
         {/* Preguntas 3 y 4 (Condicionales) */}
         {!esOpcionExclusivaSeleccionada && (
           <div className="space-y-10 animate-in fade-in slide-in-from-top-4 duration-500">
-            
+
             {/* Pregunta 3 */}
             <div className="space-y-4">
               <div>
@@ -243,7 +243,7 @@ export default function Paso3RetosYObjetivos({ initialData, onSubmit, onBack }: 
                   </div>
                 )}
               </div>
-              
+
               <div className="relative">
                 <textarea
                   className={`w-full p-3 border rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none text-gray-900
@@ -270,11 +270,11 @@ export default function Paso3RetosYObjetivos({ initialData, onSubmit, onBack }: 
               <div>
                 <h3 className="text-lg font-semibold text-foro-blue">4. ¿Cuándo te gustaría tomar acciones para resolverlo? *</h3>
               </div>
-              
+
               <div className="space-y-3">
                 {TIEMPO_OPCIONES.map((opcion) => (
-                  <label 
-                    key={opcion} 
+                  <label
+                    key={opcion}
                     className={`flex items-center p-3 rounded-lg border cursor-pointer transition-colors
                       ${tiempoAccion === opcion ? 'bg-blue-50 border-blue-600' : 'border-gray-200 hover:bg-gray-50'}
                     `}
@@ -311,7 +311,7 @@ export default function Paso3RetosYObjetivos({ initialData, onSubmit, onBack }: 
           ) : (
             <div /> // Espaciador
           )}
-          
+
           <button
             type="button"
             onClick={handleSubmit}
