@@ -4,7 +4,6 @@ export interface Paso3Data {
   motivosAsistencia: string[];
   retosActuales: string[];
   retoUrgente: string;
-  tiempoAccion: string;
 }
 
 interface Paso3Props {
@@ -43,22 +42,31 @@ const RETOS_OPCIONES = [
 
 const OPCION_EXCLUSIVA = "Por ahora no enfrento un reto específico; busco aprender y explorar";
 
-const TIEMPO_OPCIONES = [
-  "Ya estoy buscando una solución",
-  "En los próximos 3 meses",
-  "Entre 3 y 6 meses",
-  "Más adelante; por ahora quiero informarme",
-  "No aplica a mi situación actual"
-];
-
 export default function Paso3RetosYObjetivos({ initialData, onSubmit, onBack }: Paso3Props) {
   const [motivos, setMotivos] = useState<string[]>(initialData?.motivosAsistencia || []);
   const [retos, setRetos] = useState<string[]>(initialData?.retosActuales || []);
   const [retoUrgente, setRetoUrgente] = useState<string>(initialData?.retoUrgente || "");
-  const [tiempoAccion, setTiempoAccion] = useState<string>(initialData?.tiempoAccion || "");
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   const esOpcionExclusivaSeleccionada = retos.includes(OPCION_EXCLUSIVA);
+
+  // Efecto para sincronizar Pregunta 3 con las opciones de Pregunta 2
+  useEffect(() => {
+    if (esOpcionExclusivaSeleccionada) {
+      setRetoUrgente('');
+      return;
+    }
+
+    if (retos.length === 1) {
+      setRetoUrgente(retos[0]);
+    } else if (retos.length > 1) {
+      if (!retos.includes(retoUrgente)) {
+        setRetoUrgente('');
+      }
+    } else {
+      setRetoUrgente('');
+    }
+  }, [retos, esOpcionExclusivaSeleccionada]);
 
   // Manejador para Pregunta 1
   const handleMotivoChange = (opcion: string) => {
@@ -83,8 +91,6 @@ export default function Paso3RetosYObjetivos({ initialData, onSubmit, onBack }: 
           return []; // Desmarcar exclusiva
         } else {
           // Marcar exclusiva y limpiar todo lo demás
-          setRetoUrgente("Estoy explorando");
-          setTiempoAccion("No aplica");
           return [OPCION_EXCLUSIVA];
         }
       }
@@ -119,9 +125,6 @@ export default function Paso3RetosYObjetivos({ initialData, onSubmit, onBack }: 
       if (!retoUrgente.trim()) {
         newErrors.retoUrgente = "Este campo es obligatorio.";
       }
-      if (!tiempoAccion) {
-        newErrors.tiempoAccion = "Selecciona una opción.";
-      }
     }
 
     if (Object.keys(newErrors).length > 0) {
@@ -133,7 +136,6 @@ export default function Paso3RetosYObjetivos({ initialData, onSubmit, onBack }: 
       motivosAsistencia: motivos,
       retosActuales: retos,
       retoUrgente: esOpcionExclusivaSeleccionada ? "Estoy explorando" : retoUrgente,
-      tiempoAccion: esOpcionExclusivaSeleccionada ? "No aplica" : tiempoAccion,
     });
   };
 
@@ -224,7 +226,7 @@ export default function Paso3RetosYObjetivos({ initialData, onSubmit, onBack }: 
           {errors.retos && <p className="text-red-500 text-sm">{errors.retos}</p>}
         </div>
 
-        {/* Preguntas 3 y 4 (Condicionales) */}
+        {/* Pregunta 3 (Condicional) */}
         {!esOpcionExclusivaSeleccionada && (
           <div className="space-y-10 animate-in fade-in slide-in-from-top-4 duration-500">
 
@@ -232,68 +234,39 @@ export default function Paso3RetosYObjetivos({ initialData, onSubmit, onBack }: 
             <div className="space-y-4">
               <div>
                 <h3 className="text-lg font-semibold text-foro-blue">3. De esos retos, ¿Cuál te urge más resolver? *</h3>
-                {retos.length > 0 && (
-                  <div className="mt-2 p-3 bg-amber-50 border border-amber-200 rounded-md">
-                    <p className="text-xs text-amber-800 font-medium mb-1">Tus retos seleccionados:</p>
-                    <ul className="list-disc list-inside text-sm text-amber-900">
-                      {retos.map((reto, idx) => (
-                        <li key={idx} className="truncate">{reto}</li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-              </div>
-
-              <div className="relative">
-                <textarea
-                  className={`w-full p-3 border rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none text-gray-900
-                    ${errors.retoUrgente ? 'border-red-300' : 'border-gray-300'}
-                  `}
-                  rows={4}
-                  maxLength={200}
-                  placeholder="Escribe brevemente tu mayor urgencia..."
-                  value={retoUrgente}
-                  onChange={(e) => {
-                    setRetoUrgente(e.target.value);
-                    if (errors.retoUrgente) setErrors(prev => ({ ...prev, retoUrgente: '' }));
-                  }}
-                />
-                <div className={`absolute bottom-3 right-3 text-xs ${retoUrgente.length === 200 ? 'text-red-500 font-bold' : 'text-gray-400'}`}>
-                  {retoUrgente.length} / 200
-                </div>
-              </div>
-              {errors.retoUrgente && <p className="text-red-500 text-sm mt-1">{errors.retoUrgente}</p>}
-            </div>
-
-            {/* Pregunta 4 */}
-            <div className="space-y-4">
-              <div>
-                <h3 className="text-lg font-semibold text-foro-blue">4. ¿Cuándo te gustaría tomar acciones para resolverlo? *</h3>
+                <p className="text-sm text-gray-500">Selecciona el más prioritario.</p>
               </div>
 
               <div className="space-y-3">
-                {TIEMPO_OPCIONES.map((opcion) => (
+                {retos.length === 0 && (
+                   <p className="text-sm text-gray-500 italic">Selecciona tus retos en la pregunta anterior para continuar.</p>
+                )}
+                {retos.map((reto) => (
                   <label
-                    key={opcion}
-                    className={`flex items-center p-3 rounded-lg border cursor-pointer transition-colors
-                      ${tiempoAccion === opcion ? 'bg-blue-50 border-blue-600' : 'border-gray-200 hover:bg-gray-50'}
+                    key={reto}
+                    className={`flex items-center p-3 rounded-lg border transition-colors
+                      ${retoUrgente === reto ? 'bg-blue-50 border-blue-600' : 'border-gray-200 hover:bg-gray-50'}
+                      ${retos.length === 1 ? 'opacity-70 cursor-not-allowed bg-gray-50' : 'cursor-pointer'}
                     `}
                   >
                     <input
                       type="radio"
-                      name="tiempoAccion"
+                      name="retoUrgente"
                       className="h-4 w-4 text-blue-600 border-gray-300 focus:ring-blue-500"
-                      checked={tiempoAccion === opcion}
+                      checked={retoUrgente === reto}
+                      disabled={retos.length === 1}
                       onChange={() => {
-                        setTiempoAccion(opcion);
-                        if (errors.tiempoAccion) setErrors(prev => ({ ...prev, tiempoAccion: '' }));
+                        if (retos.length > 1) {
+                          setRetoUrgente(reto);
+                          if (errors.retoUrgente) setErrors(prev => ({ ...prev, retoUrgente: '' }));
+                        }
                       }}
                     />
-                    <span className="ml-3 text-sm text-gray-700">{opcion}</span>
+                    <span className="ml-3 text-sm text-gray-700">{reto}</span>
                   </label>
                 ))}
               </div>
-              {errors.tiempoAccion && <p className="text-red-500 text-sm">{errors.tiempoAccion}</p>}
+              {errors.retoUrgente && <p className="text-red-500 text-sm mt-1">{errors.retoUrgente}</p>}
             </div>
           </div>
         )}

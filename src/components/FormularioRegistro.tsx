@@ -49,7 +49,6 @@ type FormData = {
   motivosAsistencia: string[];
   retosActuales: string[];
   retoUrgente: string;
-  tiempoAccion: string;
   privacidad: boolean;
   recibir_info: boolean;
   motivaciones_otro?: string;
@@ -141,7 +140,6 @@ export default function FormularioRegistro() {
     setValue('motivosAsistencia', data.motivosAsistencia);
     setValue('retosActuales', data.retosActuales);
     setValue('retoUrgente', data.retoUrgente);
-    setValue('tiempoAccion', data.tiempoAccion);
     setStep(4);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
@@ -149,8 +147,11 @@ export default function FormularioRegistro() {
   useEffect(() => {
     if (watchTipoAcceso === 'Individual') {
       setValue('numeroAsistentes', 1);
-    } else if (watchTipoAcceso === 'Grupal' && getValues('numeroAsistentes') === 1) {
-      setValue('numeroAsistentes', 5);
+    } else if (watchTipoAcceso === 'Grupal') {
+      const currentAsistentes = getValues('numeroAsistentes') || 0;
+      if (currentAsistentes < 5) {
+        setValue('numeroAsistentes', 5);
+      }
     }
   }, [watchTipoAcceso, setValue, getValues]);
 
@@ -229,7 +230,6 @@ export default function FormularioRegistro() {
         numero_asistentes: data.numeroAsistentes || null,
         retosActuales: (data.retosActuales || []).map(r => r === 'Otro' && data.retos_otro ? sanitizeText(data.retos_otro) as string : sanitizeText(r) as string),
         retoUrgente: sanitizeText(data.retoUrgente) || null,
-        tiempoAccion: sanitizeText(data.tiempoAccion) || null,
         recibir_info: data.recibir_info,
         motivosAsistencia: (data.motivosAsistencia || []).map(m => m === 'Otra razón' && data.motivaciones_otro ? sanitizeText(data.motivaciones_otro) as string : sanitizeText(m) as string),
         expectativaAsistencia: sanitizeText(data.expectativa === 'Otro' ? data.expectativa_otro : data.expectativa) || null,
@@ -475,8 +475,16 @@ export default function FormularioRegistro() {
               <label className="mb-2 text-sm font-semibold text-gray-700">Número de asistentes *</label>
               <input 
                 type="number" 
+                min={watchTipoAcceso === 'Grupal' ? 5 : 1}
                 {...register('numeroAsistentes', { 
                   required: 'Obligatorio', 
+                  onChange: (e) => {
+                    const val = parseInt(e.target.value, 10);
+                    if (watchTipoAcceso === 'Grupal' && !isNaN(val) && val < 5) {
+                      e.target.value = '5';
+                      setValue('numeroAsistentes', 5, { shouldValidate: true });
+                    }
+                  },
                   validate: {
                     minGroup: (v) => {
                       if (watchTipoAcceso === 'Grupal') {
@@ -552,8 +560,7 @@ export default function FormularioRegistro() {
             initialData={{
               motivosAsistencia: getValues('motivosAsistencia') || [],
               retosActuales: getValues('retosActuales') || [],
-              retoUrgente: getValues('retoUrgente') || '',
-              tiempoAccion: getValues('tiempoAccion') || ''
+              retoUrgente: getValues('retoUrgente') || ''
             }}
             onSubmit={handlePaso3Submit} 
             onBack={prevStep} 
@@ -564,10 +571,10 @@ export default function FormularioRegistro() {
         <div className={step === 4 ? 'block animate-fade-in' : 'hidden'}>
           <div className="space-y-10">
 
-            {/* Q5: Expectativas */}
+            {/* Q4: Expectativas */}
             <div className="flex flex-col space-y-4">
               <div>
-                <label className="text-base font-semibold text-gray-800">5. ¿Qué tendría que pasar para que sintieras que valió la pena asistir? *</label>
+                <label className="text-base font-semibold text-gray-800">4. ¿Qué tendría que pasar para que sintieras que valió la pena asistir? *</label>
                 <p className="text-sm text-gray-500 mt-1">Selecciona el resultado más importante para ti</p>
               </div>
               <div className="space-y-3">
@@ -605,9 +612,9 @@ export default function FormularioRegistro() {
               )}
             </div>
 
-            {/* Q6: Pregunta a especialistas */}
+            {/* Q5: Pregunta a especialistas */}
             <div className="flex flex-col space-y-4 pt-6 border-t border-gray-100">
-              <label className="text-base font-semibold text-gray-800">6. Si pudieras hacer una sola pregunta a los especialistas del foro, ¿Cuál sería? (Opcional)</label>
+              <label className="text-base font-semibold text-gray-800">5. Si pudieras hacer una sola pregunta a los especialistas del foro, ¿Cuál sería? (Opcional)</label>
               <div className="relative">
                 <textarea 
                   {...register('pregunta_especialistas', { maxLength: { value: 500, message: 'Máximo 500 caracteres' } })} 
@@ -623,9 +630,9 @@ export default function FormularioRegistro() {
               {errors.pregunta_especialistas && <span className="text-red-500 text-sm font-medium">{errors.pregunta_especialistas.message}</span>}
             </div>
 
-            {/* Q7: Tipo de actividad */}
+            {/* Q6: Tipo de actividad */}
             <div className="flex flex-col space-y-4 pt-6 border-t border-gray-100 pb-6 border-b">
-              <label className="text-base font-semibold text-gray-800">7. ¿Qué tipo de actividad te sería más útil? (Opcional, máximo 2)</label>
+              <label className="text-base font-semibold text-gray-800">6. ¿Qué tipo de actividad te sería más útil? (Opcional, máximo 2)</label>
               <div className="grid grid-cols-1 gap-3">
                 {[
                   'Talleres prácticos',
