@@ -13,24 +13,24 @@ const registroSchema = z.object({
   ciudad: z.string().min(1, 'Requerido').max(100),
   estado: z.string().min(1, 'Requerido').max(100),
   situacion: z.string().min(1, 'Requerido').max(100),
-  situacion_otra: z.string().nullable(),
+  situacion_otra: z.string().nullish(),
   tipo_acceso: z.string().max(50),
   condicion_socio: z.string().max(50),
-  numero_socio: z.string().nullable(),
-  numero_asistentes: z.number().nullable(),
+  numero_socio: z.string().nullish(),
+  numero_asistentes: z.number().nullish(),
   retosActuales: z.array(z.string()),
-  retoUrgente: z.string().nullable(),
-  tiempoAccion: z.string().nullable(),
+  retoUrgente: z.string().nullish(),
+  tiempoAccion: z.string().nullish(),
   recibir_info: z.boolean(),
   motivosAsistencia: z.array(z.string()),
-  expectativaAsistencia: z.string().nullable(),
-  preguntaEspecialista: z.string().nullable(),
+  expectativaAsistencia: z.string().nullish(),
+  preguntaEspecialista: z.string().nullish(),
   actividadesUtiles: z.array(z.string()),
   subtotal: z.number(),
   iva: z.number(),
   total: z.number(),
   acepto_privacidad: z.boolean(),
-  url_comprobante: z.string().nullable()
+  url_comprobante: z.string().nullish()
 });
 
 export async function procesarRegistro(payload: any) {
