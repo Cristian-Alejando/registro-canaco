@@ -35,6 +35,7 @@ export async function enviarCorreoRegistro(correoDestino: string, nombre: string
 
     await sendMail({
       to: correoDestino,
+      bcc: process.env.SMTP_USER || 'david.carreon@canaco.net',
       subject: 'Confirmación de Registro - Foro CANACO',
       html: htmlBody,
     });
