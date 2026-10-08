@@ -291,7 +291,7 @@ export default function FormularioRegistro() {
   }`;
 
   return (
-    <div className="w-full max-w-2xl mx-auto bg-white p-6 md:p-10 rounded-lg shadow-xl border border-gray-100">
+    <div className="w-full max-w-2xl mx-auto bg-white/95 backdrop-blur-md border border-gray-200 shadow-xl rounded-2xl p-6 md:p-10">
       {status === 'success' ? (
         <div className="py-12 animate-fade-in text-center">
           <div className="mx-auto w-16 h-16 bg-foro-orange rounded-full flex items-center justify-center mb-6 shadow-md">
@@ -315,13 +315,13 @@ export default function FormularioRegistro() {
       <div className="mb-10">
         <div className="flex justify-between items-center mb-3 relative z-10">
           {[1, 2, 3, 4].map(s => (
-            <div key={s} className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm transition-all duration-500 ${step >= s ? 'bg-foro-orange text-white shadow-md scale-110' : 'bg-gray-50 text-gray-400 border border-gray-200'}`}>
+            <div key={s} className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm transition-all duration-500 ${step >= s ? 'bg-foro-orange text-white shadow-md scale-110' : 'bg-gray-100 text-gray-600 border border-gray-300'}`}>
               {s}
             </div>
           ))}
         </div>
         <div className="relative -mt-8 mb-8 z-0 px-2">
-          <div className="h-1.5 w-full bg-gray-100 rounded-full absolute top-4 left-0"></div>
+          <div className="h-1.5 w-full bg-gray-300 rounded-full absolute top-4 left-0"></div>
           <div className="h-1.5 bg-foro-orange rounded-full absolute top-4 left-0 transition-all duration-500 ease-out" style={{ width: `${((step - 1) / 3) * 100}%` }}></div>
         </div>
       </div>

@@ -1,24 +1,17 @@
 import FormularioRegistro from "@/components/FormularioRegistro";
+import Hero from "@/components/Hero";
 
 export default function Home() {
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col">
-      {/* Banner Superior */}
-      <header className="w-full bg-foro-blue text-white shadow-md">
-        <div className="max-w-4xl mx-auto py-6 px-4 text-center">
-          <h1 className="text-2xl md:text-3xl font-black tracking-widest uppercase">
-            FORO DE COMERCIO - 2026 MONTERREY, N.L.
-          </h1>
-        </div>
-        <div className="h-2 w-full bg-foro-orange"></div>
-      </header>
-
-      {/* Contenedor Principal */}
-      <main className="flex-grow flex flex-col items-center justify-center p-4 md:p-8">
-        <div className="w-full max-w-2xl w-full">
+    <div className="flex flex-col min-h-screen bg-transparent w-full">
+      <Hero />
+      {/* Se elimina el bg-slate-50 para dejar ver el fondo global del layout */}
+      <div className="flex flex-col flex-grow px-4 md:px-8 pb-12">
+        {/* Contenedor Principal de la Tarjeta del Formulario */}
+        <main className="w-full max-w-3xl mx-auto relative z-20 -mt-24 md:-mt-32">
           <FormularioRegistro />
-        </div>
-      </main>
+        </main>
+      </div>
     </div>
   );
 }
