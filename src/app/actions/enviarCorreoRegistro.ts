@@ -33,10 +33,17 @@ export async function enviarCorreoRegistro(correoDestino: string, nombre: string
       </div>
     `;
 
+    // 1. Correo al asistente
     await sendMail({
       to: correoDestino,
-      bcc: process.env.SMTP_USER || 'david.carreon@canaco.net',
       subject: 'Confirmación de Registro - Foro CANACO',
+      html: htmlBody,
+    });
+
+    // 2. Correo de respaldo interno al administrador
+    await sendMail({
+      to: process.env.SMTP_USER || 'david.carreon@canaco.net',
+      subject: 'NUEVO REGISTRO INTERNO - Foro CANACO',
       html: htmlBody,
     });
     
